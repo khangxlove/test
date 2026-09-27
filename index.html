@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; media-src https: blob:; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:;">
+<meta name="referrer" content="no-referrer">
+<title>khang x love</title>
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html,body { width:100%; height:100%; overflow:hidden; font-family:'Segoe UI',system-ui,-apple-system,'Helvetica Neue',sans-serif; }
+    body {
+        background: linear-gradient(135deg,#fff5f8 0%,#ffe4ec 35%,#fff0f5 70%,#ffe9f0 100%);
+        display:flex; align-items:center; justify-content:center; position:relative;
+    }
+    /* Cánh hoa anh đào nở rộ */
+    #sakura-bg { position:fixed; inset:0; pointer-events:none; z-index:1; overflow:hidden; }
+    .petal {
+        position:absolute; width:14px; height:14px;
+        background: radial-gradient(circle at 30% 30%, #ffc0d4, #ff85ab 60%, #ff5c8a);
+        border-radius: 150% 0 150% 0;
+        opacity:0; animation: bloom 4s ease-out forwards;
+        box-shadow: 0 0 6px rgba(255,133,171,.5);
+    }
+    @keyframes bloom {
+        0%   { opacity:0; transform: scale(0) rotate(0deg); }
+        40%  { opacity:1; transform: scale(1.3) rotate(180deg); }
+        100% { opacity:.55; transform: scale(1) rotate(360deg) translateY(0); }
+    }
+    .petal.fall { animation: fall linear infinite; }
+    @keyframes fall {
+        0%   { transform: translateY(-10vh) rotate(0deg); opacity:.7; }
+        100% { transform: translateY(110vh) rotate(720deg); opacity:0; }
+    }
+    /* Tiêu đề */
+    .title-wrap { position:relative; z-index:5; text-align:center; user-select:none; }
+    .title {
+        font-family:'Georgia','Times New Roman',serif;
+        font-size: clamp(36px, 9vw, 88px);
+        font-weight:700;
+        letter-spacing: 2px;
+        background: linear-gradient(90deg,#ff6b9d 0%,#c9184a 25%,#ff6b9d 50%,#ff2491 75%,#ff6b9d 100%);
+        background-size: 300% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        filter: drop-shadow(0 4px 12px rgba(255,107,157,.35));
+        animation: shine 6s linear infinite;
+    }
+    @keyframes shine {
+        0%   { background-position: 0% 50%; }
+        100% { background-position: 300% 50%; }
+    }
+    .subtitle {
+        margin-top:12px; font-size: clamp(12px,3vw,18px);
+        color:#c9184a; opacity:.75; letter-spacing:4px; font-weight:400;
+    }
+    /* Button nổi */
+    #music-fab {
+        position:fixed; bottom:24px; right:24px; width:62px; height:62px;
+        border-radius:50%; border:none; cursor:pointer;
+        background: linear-gradient(135deg,#ff6b9d,#c9184a);
+        color:#fff; font-size:26px;
+        box-shadow: 0 6px 20px rgba(255,107,157,.55), 0 0 0 4px rgba(255,255,255,.4);
+        z-index:1000; transition: transform .25s ease;
+        display:flex; align-items:center; justify-content:center;
+        animation: pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+        0%,100% { box-shadow: 0 6px 20px rgba(255,107,157,.55), 0 0 0 4px rgba(255,255,255,.4); }
+        50%     { box-shadow: 0 6px 28px rgba(255,107,157,.85), 0 0 0 8px rgba(255,255,255,.2); }
+    }
+    #music-fab:active { transform: scale(.9); }
+    /* Panel nhạc */
+    #music-panel {
+        position:fixed; bottom:100px; right:24px; width:min(360px, calc(100vw - 48px));
+        background: rgba(255,255,255,.94);
+        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border-radius:20px; padding:18px;
+        box-shadow: 0 20px 60px rgba(255,107,157,.35), 0 0 0 1px rgba(255,192,212,.6);
+        z-index:999; display:none;
+        transform-origin: bottom right;
+        animation: popIn .3s cubic-bezier(.2,.9,.3,1.2);
+    }
+    @keyframes popIn {
+        from { opacity:0; transform: scale(.5) translateY(20px); }
+        to   { opacity:1; transform: scale(1) translateY(0); }
+    }
+    #music-panel.show { display:block; }
+    .panel-head {
+        display:flex; align-items:center; justify-content:space-between;
+        margin-bottom:14px;
+    }
+    .panel-title {
+        font-family:'Georgia',serif; font-weight:700; font-size:16px;
+        color:#c9184a; letter-spacing:1px;
+    }
+    .close-panel {
+        width:28px; height:28px; border-radius:50%; border:none;
+        background:#ffe4ec; color:#c9184a; font-size:16px; cursor:pointer;
+        display:flex; align-items:center; justify-content:center; font-weight:700;
+    }
+    /* Chế độ */
+    .modes { display:flex; gap:8px; margin-bottom:12px; }
+    .mode-btn {
+        flex:1; padding:9px; border-radius:12px; border:2px solid #ffd6e5;
+        background:#fff; color:#c9184a; font-size:12px; font-weight:700;
+        cursor:pointer; transition: all .2s; letter-spacing:.5px;
+    }
+    .mode-btn.active {
+        background: linear-gradient(135deg,#ff6b9d,#c9184a);
+        color:#fff; border-color:#c9184a;
+        box-shadow: 0 4px 12px rgba(255,107,157,.4);
+    }
+    /* Search */
+    .search-row { display:flex; gap:8px; margin-bottom:12px; }
+    #search-input {
+        flex:1; padding:10px 14px; border-radius:12px;
+        border:2px solid #ffd6e5; background:#fff;
+        font-size:13px; color:#3d2c34; outline:none;
+        font-family:inherit;
+    }
+    #search-input:focus { border-color:#ff6b9d; box-shadow: 0 0 0 3px rgba(255,107,157,.15); }
+    #search-btn {
+        padding:0 16px; border-radius:12px; border:none; cursor:pointer;
+        background: linear-gradient(135deg,#ff6b9d,#c9184a); color:#fff;
+        font-size:16px; font-weight:700;
+    }
+    /* Player */
+    .now-playing {
+        font-size:11px; color:#8a6b77; text-align:center;
+        margin-bottom:10px; padding:8px; border-radius:10px;
+        background:#fff0f5; min-height:36px;
+        display:flex; align-items:center; justify-content:center;
+        overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+        font-weight:600;
+    }
+    .progress-wrap {
+        display:flex; align-items:center; gap:8px; margin-bottom:12px;
+        font-size:11px; color:#8a6b77; font-variant-numeric: tabular-nums;
+    }
+    #progress {
+        flex:1; height:4px; border-radius:2px; background:#ffe4ec;
+        outline:none; -webkit-appearance:none; cursor:pointer;
+    }
+    #progress::-webkit-slider-thumb {
+        -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
+        background:#ff6b9d; box-shadow: 0 0 0 3px rgba(255,107,157,.25);
+        cursor:pointer;
+    }
+    #progress::-moz-range-thumb {
+        width:14px; height:14px; border-radius:50%; background:#ff6b9d;
+        border:none; cursor:pointer;
+    }
+    /* Controls */
+    .controls {
+        display:flex; align-items:center; justify-content:center; gap:10px;
+        margin-bottom:12px;
+    }
+    .ctrl-btn {
+        width:44px; height:44px; border-radius:50%; border:none; cursor:pointer;
+        background:#ffe4ec; color:#c9184a; font-size:16px; font-weight:700;
+        display:flex; align-items:center; justify-content:center;
+        transition: transform .15s;
+    }
+    .ctrl-btn:active { transform: scale(.9); }
+    .ctrl-btn.main {
+        width:54px; height:54px; font-size:20px;
+        background: linear-gradient(135deg,#ff6b9d,#c9184a); color:#fff;
+        box-shadow: 0 4px 14px rgba(255,107,157,.45);
+    }
+    /* Volume */
+    .volume-row {
+        display:flex; align-items:center; gap:8px; font-size:12px; color:#8a6b77;
+    }
+    #volume {
+        flex:1; height:4px; border-radius:2px; background:#ffe4ec;
+        outline:none; -webkit-appearance:none; cursor:pointer;
+    }
+    #volume::-webkit-slider-thumb {
+        -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
+        background:#ff6b9d; box-shadow: 0 0 0 3px rgba(255,107,157,.25);
+        cursor:pointer;
+    }
+    #volume::-moz-range-thumb {
+        width:14px; height:14px; border-radius:50%; background:#ff6b9d;
+        border:none; cursor:pointer;
+    }
+    /* An toàn - không hiện gì nguy hiểm */
+    .safe-badge {
+        position:fixed; top:16px; left:16px; z-index:100;
+        font-size:10px; color:#8a6b77; opacity:.5;
+        letter-spacing:1px; user-select:none;
+    }
+</style>
+</head>
+<body>
+
+<div class="safe-badge">🔒 an toàn - riêng tư</div>
+
+<div id="sakura-bg"></div>
+
+<div class="title-wrap">
+    <h1 class="title">khang x love</h1>
+    <div class="subtitle">🌸 giữa màn hình - nở rộ 🌸</div>
+</div>
+
+<button id="music-fab" title="Music">🎵</button>
+
+<div id="music-panel">
+    <div class="panel-head">
+        <div class="panel-title">🌸 Music khang x love</div>
+        <button class="close-panel" id="close-panel">×</button>
+    </div>
+
+    <div class="modes">
+        <button class="mode-btn active" data-mode="random">🎲 Random</button>
+        <button class="mode-btn" data-mode="remix">🔥 Remix</button>
+    </div>
+
+    <div class="search-row">
+        <input id="search-input" type="text" placeholder="Tìm nhạc...">
+        <button id="search-btn">🔍</button>
+    </div>
+
+    <div class="now-playing" id="now-playing">Chưa có nhạc</div>
+
+    <div class="progress-wrap">
+        <span id="cur-time">0:00</span>
+        <input id="progress" type="range" min="0" max="100" value="0" step="0.1">
+        <span id="dur-time">0:00</span>
+    </div>
+
+    <div class="controls">
+        <button class="ctrl-btn" id="back-1s" title="-1s">⏪</button>
+        <button class="ctrl-btn main" id="play-pause" title="Play/Pause">▶</button>
+        <button class="ctrl-btn" id="fwd-1s" title="+1s">⏩</button>
+    </div>
+
+    <div class="volume-row">
+        <span>🔈</span>
+        <input id="volume" type="range" min="0" max="100" value="70" step="1">
+        <span>🔊</span>
+    </div>
+</div>
+
+<audio id="player" crossorigin="anonymous" preload="auto"></audio>
+
+<script>
+/* ============================================================
+   CẤU HÌNH - AN TOÀN, KHÔNG GỬI DỮ LIỆU RA NGOÀI
+   ============================================================ */
+const CONFIG = {
+    // API tìm nhạc công khai - chỉ gửi từ khoá, không gửi thông tin người dùng
+    apiSearch: "https://api.deezer.com/search",
+    // Số lượng kết quả tối đa
+    limit: 20,
+    // Chế độ mặc định
+    defaultMode: "random",
+    // Từ khoá remix mặc định
+    remixKeyword: "remix",
+    // Từ khoá random mặc định (nhạc hot)
+    randomKeyword: "top hits 2024"
+};
+
+/* ============================================================
+   CÁNH HOA ANH ĐÀO NỞ RỘ
+   ============================================================ */
+const sakuraBg = document.getElementById('sakura-bg');
+
+function createBloomPetals() {
+    const total = 60;
+    for (let i = 0; i < total; i++) {
+        const p = document.createElement('div');
+        p.className = 'petal';
+        p.style.left = Math.random() * 100 + 'vw';
+        p.style.top = Math.random() * 100 + 'vh';
+        p.style.animationDelay = (Math.random() * 4) + 's';
+        p.style.animationDuration = (3 + Math.random() * 3) + 's';
+        const scale = 0.6 + Math.random() * 1.2;
+        p.style.transform = 'scale(' + scale + ')';
+        sakuraBg.appendChild(p);
+    }
+    // Sau khi nở xong, chuyển thành cánh rơi
+    setTimeout(() => {
+        sakuraBg.innerHTML = '';
+        for (let i = 0; i < 40; i++) {
+            const p = document.createElement('div');
+            p.className = 'petal fall';
+            p.style.left = Math.random() * 100 + 'vw';
+            p.style.animationDelay = (Math.random() * 10) + 's';
+            p.style.animationDuration = (8 + Math.random() * 8) + 's';
+            const scale = 0.5 + Math.random() * 1;
+            p.style.transform = 'scale(' + scale + ')';
+            sakuraBg.appendChild(p);
+        }
+    }, 4200);
+}
+createBloomPetals();
+
+/* ============================================================
+   PLAYER
+   ============================================================ */
+const player = document.getElementById('player');
+const fab = document.getElementById('music-fab');
+const panel = document.getElementById('music-panel');
+const closePanel = document.getElementById('close-panel');
+const searchInput = document.getElementById('search-input');
+const searchBtn = document.getElementById('search-btn');
+const nowPlaying = document.getElementById('now-playing');
+const playPause = document.getElementById('play-pause');
+const back1s = document.getElementById('back-1s');
+const fwd1s = document.getElementById('fwd-1s');
+const progress = document.getElementById('progress');
+const curTime = document.getElementById('cur-time');
+const durTime = document.getElementById('dur-time');
+const volume = document.getElementById('volume');
+const modeBtns = document.querySelectorAll('.mode-btn');
+
+let currentMode = CONFIG.defaultMode;
+let queue = [];
+let queueIndex = 0;
+let isPlaying = false;
+
+/* --- Định dạng thời gian --- */
+function fmt(sec) {
+    if (!isFinite(sec)) return '0:00';
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+/* --- Ẩn/hiện panel --- */
+fab.addEventListener('click', () => {
+    panel.classList.toggle('show');
+    if (panel.classList.contains('show')) {
+        searchInput.focus();
+    }
+});
+closePanel.addEventListener('click', () => panel.classList.remove('show'));
+
+/* --- Chọn chế độ --- */
+modeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        modeBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentMode = btn.dataset.mode;
+        autoLoad();
+    });
+});
+
+/* --- Điều khiển --- */
+playPause.addEventListener('click', () => {
+    if (!player.src) {
+        autoLoad();
+        return;
+    }
+    if (player.paused) {
+        player.play();
+        playPause.textContent = '⏸';
+    } else {
+        player.pause();
+        playPause.textContent = '▶';
+    }
+});
+
+back1s.addEventListener('click', () => {
+    player.currentTime = Math.max(0, player.currentTime - 1);
+});
+
+fwd1s.addEventListener('click', () => {
+    player.currentTime = Math.min(player.duration || 0, player.currentTime + 1);
+});
+
+volume.addEventListener('input', () => {
+    player.volume = volume.value / 100;
+});
+player.volume = volume.value / 100;
+
+/* --- Progress --- */
+player.addEventListener('timeupdate', () => {
+    if (player.duration) {
+        progress.value = (player.currentTime / player.duration) * 100;
+        curTime.textContent = fmt(player.currentTime);
+        durTime.textContent = fmt(player.duration);
+    }
+});
+progress.addEventListener('input', () => {
+    if (player.duration) {
+        player.currentTime = (progress.value / 100) * player.duration;
+    }
+});
+
+/* --- Khi hết bài --- */
+player.addEventListener('ended', () => {
+    playNext();
+});
+
+/* --- Tìm nhạc qua Deezer API (không cần key) --- */
+async function searchTracks(keyword) {
+    try {
+        const url = CONFIG.apiSearch + '?q=' + encodeURIComponent(keyword) + '&limit=' + CONFIG.limit;
+        const res = await fetch(url, { referrerPolicy: 'no-referrer' });
+        const data = await res.json();
+        if (!data.data || !data.data.length) return [];
+        return data.data.map(t => ({
+            id: t.id,
+            title: t.title,
+            artist: t.artist ? t.artist.name : 'Unknown',
+            preview: t.preview // URL mp3 30s
+        })).filter(t => t.preview);
+    } catch (e) {
+        console.error('search err', e);
+        return [];
+    }
+}
+
+/* --- Phát bài --- */
+function playTrack(track) {
+    if (!track || !track.preview) return;
+    player.src = track.preview;
+    player.play().then(() => {
+        isPlaying = true;
+        playPause.textContent = '⏸';
+        nowPlaying.textContent = '🎵 ' + track.title + ' — ' + track.artist;
+    }).catch(err => {
+        console.warn('play err', err);
+        playNext();
+    });
+}
+
+/* --- Next --- */
+function playNext() {
+    if (!queue.length) return;
+    queueIndex++;
+    if (queueIndex >= queue.length) {
+        if (currentMode === 'remix') {
+            queueIndex = 0;
+        } else {
+            autoLoad();
+            return;
+        }
+    }
+    playTrack(queue[queueIndex]);
+}
+
+/* --- Random 1 bài --- */
+function randomPick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
+/* --- Tự động load theo chế độ --- */
+async function autoLoad() {
+    nowPlaying.textContent = '⏳ Đang tải...';
+    let keyword = '';
+    if (currentMode === 'remix') {
+        keyword = CONFIG.remixKeyword + ' ' + new Date().getFullYear();
+    } else {
+        keyword = CONFIG.randomKeyword;
+    }
+    const results = await searchTracks(keyword);
+    if (!results.length) {
+        nowPlaying.textContent = '❌ Không tìm thấy nhạc';
+        return;
+    }
+    queue = results;
+    // Random bài đầu
+    queueIndex = Math.floor(Math.random() * results.length);
+    playTrack(queue[queueIndex]);
+}
+
+/* --- Tìm kiếm --- */
+async function doSearch() {
+    const kw = searchInput.value.trim();
+    if (!kw) return;
+    nowPlaying.textContent = '⏳ Đang tìm "' + kw + '"...';
+    const results = await searchTracks(kw);
+    if (!results.length) {
+        nowPlaying.textContent = '❌ Không tìm thấy "' + kw + '"';
+        return;
+    }
+    queue = results;
+    queueIndex = 0;
+    playTrack(queue[0]);
+}
+
+searchBtn.addEventListener('click', doSearch);
+searchInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') doSearch();
+});
+
+/* --- Tự load bài đầu khi mở panel lần đầu --- */
+let firstOpen = true;
+fab.addEventListener('click', () => {
+    if (firstOpen) {
+        firstOpen = false;
+        autoLoad();
+    }
+});
+
+/* --- Bảo mật: chặn mọi request ngoài ý muốn --- */
+window.addEventListener('beforeunload', () => {
+    player.pause();
+});
+
+/* --- Chống F12 nhẹ (tùy chọn, không cản trở) --- */
+document.addEventListener('contextmenu', e => {
+    if (e.target.tagName === 'BODY') e.preventDefault();
+});
+</script>
+
+</body>
+</html>
